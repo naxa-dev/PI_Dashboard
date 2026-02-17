@@ -1,59 +1,86 @@
 {% extends "base.html" %}
 {% block content %}
-<h2>스냅샷 업로드</h2>
-<form action="/admin/upload" method="post" enctype="multipart/form-data">
-    <input type="file" name="file" accept=".xlsx" required>
-    <button type="submit">업로드</button>
-</form>
-
-{% if report %}
-<section class="report">
-    <h3>업로드 결과</h3>
-    <p>{{ report.message }}</p>
-    {% if report.success %}
-    <p>프로젝트 처리: {{ report.processed_projects }}, 이벤트 처리: {{ report.processed_events }}</p>
-    {% else %}
-    <p style="color:red;">업로드 실패</p>
-    {% endif %}
-    {% if report.warnings %}
-    <div class="warning">
-        <h4>경고</h4>
-        <ul>
-        {% for w in report.warnings %}
-            <li>{{ w }}</li>
-        {% endfor %}
-        </ul>
+<div class="cockpit-wrap">
+    <div class="cockpit-title">
+        <h2>스냅샷 관리 (Admin)</h2>
     </div>
-    {% endif %}
-    {% if report.errors %}
-    <div class="errors">
-        <h4>오류</h4>
-        <ul>
-        {% for e in report.errors %}
-            <li>{{ e }}</li>
-        {% endfor %}
-        </ul>
-    </div>
-    {% endif %}
-</section>
-{% endif %}
 
-<h2>스냅샷 목록</h2>
-<table>
-    <thead>
-        <tr><th>날짜</th><th>업로드 시간</th><th>파일명</th><th>대시보드</th><th>프로젝트</th><th>이벤트</th></tr>
-    </thead>
-    <tbody>
-    {% for s in snapshots %}
-        <tr>
-            <td>{{ s['snapshot_date'] }}</td>
-            <td>{{ s['uploaded_at'] }}</td>
-            <td>{{ s['source_filename'] }}</td>
-            <td><a href="/?snapshot_id={{ s['snapshot_id'] }}">보기</a></td>
-            <td><a href="/admin/projects?snapshot_id={{ s['snapshot_id'] }}">관리</a></td>
-            <td><a href="/admin/events?snapshot_id={{ s['snapshot_id'] }}">관리</a></td>
-        </tr>
-    {% endfor %}
-    </tbody>
-</table>
+    <div class="card" style="margin-bottom: 20px;">
+        <div class="card-head">
+            <p class="card-title">📂 신규 스냅샷 업로드</p>
+        </div>
+        <form action="/admin/upload" method="post" enctype="multipart/form-data"
+            style="display:flex; gap:10px; align-items:center;">
+            <input type="file" name="files" accept=".xlsx" required multiple class="input"
+                style="background: rgba(15,30,55,0.5); color: #fff; border-color: rgba(96,165,250,0.3);">
+            <button type="submit" class="btn">업로드</button>
+        </form>
+
+        {% if report %}
+        <div
+            style="margin-top: 15px; padding: 15px; background: rgba(30,58,138,0.2); border-radius: 8px; border: 1px solid rgba(96,165,250,0.2);">
+            <h3 style="margin-top:0; font-size:14px; color:#fff;">업로드 결과</h3>
+            <p style="font-size:13px; color:rgba(255,255,255,0.8);">{{ report.message }}</p>
+            {% if report.success %}
+            <p style="font-size:13px; color:rgba(52,211,153,0.9);">프로젝트 처리: {{ report.processed_projects }}, 이벤트 처리: {{
+                report.processed_events }}</p>
+            {% else %}
+            <p style="font-size:13px; color:rgba(239,68,68,0.9);">업로드 실패</p>
+            {% endif %}
+
+            {% if report.warnings %}
+            <div style="margin-top:10px; color:rgba(251,191,36,0.9); font-size:12px;">
+                <strong>경고:</strong>
+                <ul style="margin:5px 0 0 20px; padding:0;">
+                    {% for w in report.warnings %}
+                    <li>{{ w }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+
+            {% if report.errors %}
+            <div style="margin-top:10px; color:rgba(239,68,68,0.9); font-size:12px;">
+                <strong>오류:</strong>
+                <ul style="margin:5px 0 0 20px; padding:0;">
+                    {% for e in report.errors %}
+                    <li>{{ e }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="card">
+        <div class="card-head">
+            <p class="card-title">📋 스냅샷 목록</p>
+        </div>
+        <table class="table-dark">
+            <thead>
+                <tr>
+                    <th>날짜</th>
+                    <th>업로드 시간</th>
+                    <th>파일명</th>
+                    <th>대시보드</th>
+                    <th>프로젝트</th>
+                    <th>이벤트</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for s in snapshots %}
+                <tr>
+                    <td>{{ s['snapshot_date'] }}</td>
+                    <td>{{ s['uploaded_at'] }}</td>
+                    <td>{{ s['source_filename'] }}</td>
+                    <td><a href="/?snapshot_id={{ s['snapshot_id'] }}" class="link">보기</a></td>
+                    <td><a href="/admin/projects?snapshot_id={{ s['snapshot_id'] }}" class="link">관리</a></td>
+                    <td><a href="/admin/events?snapshot_id={{ s['snapshot_id'] }}" class="link">관리</a></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
 {% endblock %}

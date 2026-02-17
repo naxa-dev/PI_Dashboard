@@ -68,6 +68,7 @@ def list_events(request: Request, snapshot_id: int = None, month: str = None, co
         "selected_month": selected_month,
         "events": events,
         "champions": champions,
+        "body_class": "cockpit"
     })
 
 

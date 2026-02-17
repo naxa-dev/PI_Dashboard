@@ -1,66 +1,107 @@
 {% extends "base.html" %}
 {% block content %}
-<h2>프로젝트 관리</h2>
-<form method="get" action="/admin/projects">
-    <label for="snapshot_select">스냅샷:</label>
-    <select name="snapshot_id" id="snapshot_select" onchange="this.form.submit()">
-        {% for s in snapshots %}
-        <option value="{{ s['snapshot_id'] }}" {% if snapshot and s['snapshot_id'] == snapshot['snapshot_id'] %}selected{% endif %}>{{ s['snapshot_date'] }}</option>
-        {% endfor %}
-    </select>
-</form>
+<div class="cockpit-wrap">
+    <div class="cockpit-title">
+        <h2>프로젝트 관리</h2>
+    </div>
 
-{% if edit_project %}
-<h3>프로젝트 수정: {{ edit_project['project_id'] }}</h3>
-<form method="post" action="/admin/projects/{{ snapshot_id }}/{{ edit_project['project_id'] }}/edit">
-    <label>과제명: <input type="text" name="project_name" value="{{ edit_project['project_name'] }}" required></label><br>
-    <label>Champion:
-        <select name="champion_id">
-            <option value="0" {% if not edit_project.champion_id %}selected{% endif %}>(미할당)</option>
-            {% for c in champions %}
-            <option value="{{ c['champion_id'] }}" {% if edit_project['champion_id'] == c['champion_id'] %}selected{% endif %}>{{ c['name'] }}</option>
-            {% endfor %}
-        </select>
-    </label><br>
-    <label>전략분류:
-        <select name="strategy_id">
-            <option value="0" {% if not edit_project.strategy_id %}selected{% endif %}>(미할당)</option>
-            {% for s in strategies %}
-            <option value="{{ s['strategy_id'] }}" {% if edit_project['strategy_id'] == s['strategy_id'] %}selected{% endif %}>{{ s['name'] }}</option>
-            {% endfor %}
-        </select>
-    </label><br>
-    <label>수행부서: <input type="text" name="org_unit" value="{{ edit_project['org_unit'] or '' }}"></label><br>
-    <label>상태:
-        <select name="current_status">
-            {% set statuses = ['제안', '심의중', '승인(진행중)', '완료', '보류'] %}
-            {% for st in statuses %}
-            <option value="{{ st }}" {% if edit_project['current_status'] == st %}selected{% endif %}>{{ st }}</option>
-            {% endfor %}
-        </select>
-    </label><br>
-    <label>제안월: <input type="text" name="proposed_month" value="{{ edit_project['proposed_month'] or '' }}" placeholder="YYYY-MM"></label><br>
-    <label>승인월: <input type="text" name="approved_month" value="{{ edit_project['approved_month'] or '' }}" placeholder="YYYY-MM"></label><br>
-    <button type="submit">저장</button>
-    <a href="/admin/projects?snapshot_id={{ snapshot_id }}">취소</a>
-</form>
-{% else %}
-<table>
-    <thead><tr><th>과제ID</th><th>과제명</th><th>Champion</th><th>전략분류</th><th>상태</th><th>제안월</th><th>승인월</th><th>편집</th></tr></thead>
-    <tbody>
-    {% for p in projects %}
-        <tr>
-            <td>{{ p['project_id'] }}</td>
-            <td>{{ p['project_name'] }}</td>
-            <td>{{ p['champion_name'] if p['champion_id'] else '(미할당)' }}</td>
-            <td>{{ p['strategy_name'] if p['strategy_id'] else '(미할당)' }}</td>
-            <td>{{ p['current_status'] }}</td>
-            <td>{{ p['proposed_month'] or '' }}</td>
-            <td>{{ p['approved_month'] or '' }}</td>
-            <td><a href="/admin/projects/{{ p['snapshot_id'] }}/{{ p['project_id'] }}/edit">수정</a></td>
-        </tr>
-    {% endfor %}
-    </tbody>
-</table>
-{% endif %}
+    <div class="card" style="margin-bottom: 20px;">
+        <form method="get" action="/admin/projects" class="filters">
+            <label for="snapshot_select" style="color: #fff;">스냅샷 선택:</label>
+            <select name="snapshot_id" id="snapshot_select" onchange="this.form.submit()" class="select">
+                {% for s in snapshots %}
+                <option value="{{ s['snapshot_id'] }}" {% if snapshot and s['snapshot_id']==snapshot['snapshot_id']
+                    %}selected{% endif %}>{{ s['snapshot_date'] }}</option>
+                {% endfor %}
+            </select>
+        </form>
+    </div>
+
+    {% if edit_project %}
+    <div class="card">
+        <div class="card-head">
+            <p class="card-title">✏️ 프로젝트 수정: {{ edit_project['project_id'] }}</p>
+        </div>
+        <form method="post" action="/admin/projects/{{ snapshot_id }}/{{ edit_project['project_id'] }}/edit"
+            style="display:grid; gap:15px; grid-template-columns: 1fr 1fr;">
+            <label style="color:#ccc;">과제명: <input type="text" name="project_name"
+                    value="{{ edit_project['project_name'] }}" required class="input"
+                    style="width:100%; box-sizing:border-box; background: rgba(15,30,55,0.5); color: #fff; border-color: rgba(96,165,250,0.3);"></label>
+            <label style="color:#ccc;">Champion:
+                <select name="champion_id" class="select" style="width:100%; box-sizing:border-box;">
+                    <option value="0" {% if not edit_project.champion_id %}selected{% endif %}>(미할당)</option>
+                    {% for c in champions %}
+                    <option value="{{ c['champion_id'] }}" {% if edit_project['champion_id']==c['champion_id']
+                        %}selected{% endif %}>{{ c['name'] }}</option>
+                    {% endfor %}
+                </select>
+            </label>
+            <label style="color:#ccc;">전략분류:
+                <select name="strategy_id" class="select" style="width:100%; box-sizing:border-box;">
+                    <option value="0" {% if not edit_project.strategy_id %}selected{% endif %}>(미할당)</option>
+                    {% for s in strategies %}
+                    <option value="{{ s['strategy_id'] }}" {% if edit_project['strategy_id']==s['strategy_id']
+                        %}selected{% endif %}>{{ s['name'] }}</option>
+                    {% endfor %}
+                </select>
+            </label>
+            <label style="color:#ccc;">수행부서: <input type="text" name="org_unit"
+                    value="{{ edit_project['org_unit'] or '' }}" class="input"
+                    style="width:100%; box-sizing:border-box; background: rgba(15,30,55,0.5); color: #fff; border-color: rgba(96,165,250,0.3);"></label>
+            <label style="color:#ccc;">상태:
+                <select name="current_status" class="select" style="width:100%; box-sizing:border-box;">
+                    {% set statuses = ['제안', '심의중', '승인(진행중)', '완료', '보류'] %}
+                    {% for st in statuses %}
+                    <option value="{{ st }}" {% if edit_project['current_status']==st %}selected{% endif %}>{{ st }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </label>
+            <label style="color:#ccc;">제안월: <input type="text" name="proposed_month"
+                    value="{{ edit_project['proposed_month'] or '' }}" placeholder="YYYY-MM" class="input"
+                    style="width:100%; box-sizing:border-box; background: rgba(15,30,55,0.5); color: #fff; border-color: rgba(96,165,250,0.3);"></label>
+            <label style="color:#ccc;">승인월: <input type="text" name="approved_month"
+                    value="{{ edit_project['approved_month'] or '' }}" placeholder="YYYY-MM" class="input"
+                    style="width:100%; box-sizing:border-box; background: rgba(15,30,55,0.5); color: #fff; border-color: rgba(96,165,250,0.3);"></label>
+
+            <div style="grid-column: span 2; display:flex; gap:10px; margin-top:10px;">
+                <button type="submit" class="btn">저장</button>
+                <a href="/admin/projects?snapshot_id={{ snapshot_id }}" class="btn secondary">취소</a>
+            </div>
+        </form>
+    </div>
+    {% else %}
+    <div class="card">
+        <table class="table-dark">
+            <thead>
+                <tr>
+                    <th>과제ID</th>
+                    <th>과제명</th>
+                    <th>Champion</th>
+                    <th>전략분류</th>
+                    <th>상태</th>
+                    <th>제안월</th>
+                    <th>승인월</th>
+                    <th>편집</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in projects %}
+                <tr>
+                    <td style="color:rgba(96,165,250,0.9); font-weight:700;">{{ p['project_id'] }}</td>
+                    <td>{{ p['project_name'] }}</td>
+                    <td>{{ p['champion_name'] if p['champion_id'] else '(미할당)' }}</td>
+                    <td>{{ p['strategy_name'] if p['strategy_id'] else '(미할당)' }}</td>
+                    <td><span class="pill" style="padding:4px 8px;">{{ p['current_status'] }}</span></td>
+                    <td>{{ p['proposed_month'] or '' }}</td>
+                    <td>{{ p['approved_month'] or '' }}</td>
+                    <td><a href="/admin/projects/{{ p['snapshot_id'] }}/{{ p['project_id'] }}/edit" class="link">수정</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+</div>
 {% endblock %}

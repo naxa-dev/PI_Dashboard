@@ -44,6 +44,12 @@ def create_app() -> FastAPI:
     app.include_router(admin_router)
     app.include_router(projects_router)
     app.include_router(events_router)
+    app.include_router(events_router)
+
+    @app.get("/.well-known/appspecific/com.chrome.devtools.json")
+    def chrome_devtools_manifest():
+        return {}
+
     return app
 
 

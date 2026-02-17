@@ -1,49 +1,76 @@
 {% extends "base.html" %}
 {% block content %}
-<h2>이벤트 관리</h2>
-<form method="get" action="/admin/events">
-    <label for="snapshot_select">스냅샷:</label>
-    <select name="snapshot_id" id="snapshot_select" onchange="this.form.submit()">
-        {% for s in snapshots %}
-        <option value="{{ s['snapshot_id'] }}" {% if snapshot and s['snapshot_id'] == snapshot['snapshot_id'] %}selected{% endif %}>{{ s['snapshot_date'] }}</option>
-        {% endfor %}
-    </select>
-    {% if months %}
-    <label for="month_select">월:</label>
-    <select name="month" id="month_select" onchange="this.form.submit()">
-        {% for m in months %}
-        <option value="{{ m }}" {% if selected_month == m %}selected{% endif %}>{{ m }}</option>
-        {% endfor %}
-    </select>
-    {% endif %}
-</form>
+<div class="cockpit-wrap">
+    <div class="cockpit-title">
+        <h2>이벤트 관리</h2>
+    </div>
 
-{% if selected_month %}
-<table>
-    <thead><tr><th>과제ID</th><th>Champion</th><th>신규제안</th><th>승인</th><th>비고</th><th>저장</th></tr></thead>
-    <tbody>
-    {% for e in events %}
-        <tr>
-            <form method="post" action="/admin/events/{{ e['snapshot_id'] }}/{{ e['month_key'] }}/{{ e['project_id'] }}/edit">
-                <td>{{ e['project_id'] }}</td>
-                <td>
-                    <select name="champion_id">
-                        <option value="0" {% if not e['champion_id'] %}selected{% endif %}>(미할당)</option>
-                        {% for c in champions %}
-                        <option value="{{ c['champion_id'] }}" {% if e['champion_id'] == c['champion_id'] %}selected{% endif %}>{{ c['name'] }}</option>
-                        {% endfor %}
-                    </select>
-                </td>
-                <td><input type="checkbox" name="is_new_proposal" value="true" {% if e['is_new_proposal'] %}checked{% endif %}></td>
-                <td><input type="checkbox" name="is_approved" value="true" {% if e['is_approved'] %}checked{% endif %}></td>
-                <td><input type="text" name="note" value="{{ e['note'] or '' }}"></td>
-                <td><button type="submit">저장</button></td>
-            </form>
-        </tr>
-    {% endfor %}
-    </tbody>
-</table>
-{% else %}
-<p>선택된 스냅샷에 월 정보가 없습니다.</p>
-{% endif %}
+    <div class="card" style="margin-bottom: 20px;">
+        <form method="get" action="/admin/events" class="filters">
+            <label for="snapshot_select" style="color: #fff;">스냅샷:</label>
+            <select name="snapshot_id" id="snapshot_select" onchange="this.form.submit()" class="select">
+                {% for s in snapshots %}
+                <option value="{{ s['snapshot_id'] }}" {% if snapshot and s['snapshot_id']==snapshot['snapshot_id']
+                    %}selected{% endif %}>{{ s['snapshot_date'] }}</option>
+                {% endfor %}
+            </select>
+            {% if months %}
+            <label for="month_select" style="color: #fff; margin-left:15px;">월:</label>
+            <select name="month" id="month_select" onchange="this.form.submit()" class="select">
+                {% for m in months %}
+                <option value="{{ m }}" {% if selected_month==m %}selected{% endif %}>{{ m }}</option>
+                {% endfor %}
+            </select>
+            {% endif %}
+        </form>
+    </div>
+
+    {% if selected_month %}
+    <div class="card">
+        <table class="table-dark">
+            <thead>
+                <tr>
+                    <th>과제ID</th>
+                    <th>Champion</th>
+                    <th>신규제안</th>
+                    <th>승인</th>
+                    <th>비고</th>
+                    <th>저장</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for e in events %}
+                <tr>
+                    <form method="post"
+                        action="/admin/events/{{ e['snapshot_id'] }}/{{ e['month_key'] }}/{{ e['project_id'] }}/edit">
+                        <td style="color:rgba(96,165,250,0.9); font-weight:700;">{{ e['project_id'] }}</td>
+                        <td>
+                            <select name="champion_id" class="select" style="padding:2px; font-size:0.9em;">
+                                <option value="0" {% if not e['champion_id'] %}selected{% endif %}>(미할당)</option>
+                                {% for c in champions %}
+                                <option value="{{ c['champion_id'] }}" {% if e['champion_id']==c['champion_id']
+                                    %}selected{% endif %}>{{ c['name'] }}</option>
+                                {% endfor %}
+                            </select>
+                        </td>
+                        <td style="text-align:center;"><input type="checkbox" name="is_new_proposal" value="true" {% if
+                                e['is_new_proposal'] %}checked{% endif %}></td>
+                        <td style="text-align:center;"><input type="checkbox" name="is_approved" value="true" {% if
+                                e['is_approved'] %}checked{% endif %}></td>
+                        <td><input type="text" name="note" value="{{ e['note'] or '' }}" class="input"
+                                style="width:100%; box-sizing:border-box; background: rgba(15,30,55,0.5); color: #fff; border-color: rgba(96,165,250,0.3);">
+                        </td>
+                        <td><button type="submit" class="btn" style="padding:4px 8px; font-size:0.8em;">저장</button></td>
+                    </form>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="card">
+        <p style="color:rgba(255,255,255,0.7);">선택된 스냅샷에 월 정보가 없습니다.</p>
+    </div>
+    {% endif %}
+</div>
 {% endblock %}

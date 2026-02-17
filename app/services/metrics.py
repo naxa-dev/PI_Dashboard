@@ -206,7 +206,7 @@ def compute_kpis(conn: sqlite3.Connection, snapshot_id: int, month: str) -> Dict
 
 
 def compute_ranking(
-    conn: sqlite3.Connection, snapshot_id: int, month: str
+    conn: sqlite3.Connection, snapshot_id: int, month: str, rank_sort: str = "count", rank_order: str = "desc"
 ) -> Tuple[List[Tuple[str, int]], List[Tuple[str, int]], List[Tuple[str, int]]]:
     c = conn.cursor()
     c.execute("SELECT champion_id, name FROM champions")
@@ -256,6 +256,23 @@ def compute_ranking(
     proposal_ranking.sort(key=lambda x: (-x[1], x[0] or ""))
     approval_ranking.sort(key=lambda x: (-x[1], x[0] or ""))
     active_ranking.sort(key=lambda x: (-x[1], x[0] or ""))
+
+    # Ranking Sort Logic
+    if rank_sort == "champion":
+        # Sort by Name
+        reverse = (rank_order == "desc")
+        active_ranking.sort(key=lambda x: x[0] or "", reverse=reverse)
+    else:
+        # Default: Sort by Count (desc default)
+        # If rank_sort is 'count' or None
+        reverse = (rank_order == "desc")
+        # Primary: Count, Secondary: Name
+        # Note: If sorting by count ASC, we want low counts first.
+        # If sorting by count DESC, we want high counts first.
+        if reverse:
+              active_ranking.sort(key=lambda x: (-x[1], x[0] or ""))
+        else:
+             active_ranking.sort(key=lambda x: (x[1], x[0] or ""))
 
     return proposal_ranking, approval_ranking, active_ranking
 

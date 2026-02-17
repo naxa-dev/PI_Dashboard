@@ -65,6 +65,7 @@ def list_projects(request: Request, snapshot_id: int = None, conn = Depends(get_
         "projects": projects,
         "champions": champions,
         "strategies": strategies,
+        "body_class": "cockpit"
     })
 
 
@@ -87,6 +88,7 @@ def edit_project_form(request: Request, snapshot_id: int, project_id: str, conn 
         "champions": champions,
         "strategies": strategies,
         "snapshot_id": snapshot_id,
+        "body_class": "cockpit"
     })
 
 

@@ -36,6 +36,10 @@ def dashboard(
     filter_champion: str = Query(None),
     filter_strategy: str = Query(None),
     filter_status: str = Query("승인(진행중)"),
+    sort: str = Query(None),
+    order: str = Query("asc"),
+    rank_sort: str = Query("count"),
+    rank_order: str = Query("desc"),
     conn=Depends(get_conn),
 ):
     """Render dashboard page."""
@@ -75,7 +79,7 @@ def dashboard(
     if selected_month:
         kpis = metrics_service.compute_kpis(conn, selected_snapshot["snapshot_id"], selected_month)
         proposal_ranking, approval_ranking, active_ranking = metrics_service.compute_ranking(
-            conn, selected_snapshot["snapshot_id"], selected_month
+            conn, selected_snapshot["snapshot_id"], selected_month, rank_sort, rank_order
         )
         distribution = metrics_service.compute_distribution(conn, selected_snapshot["snapshot_id"], selected_month)
         heatmap = metrics_service.compute_heatmap(conn, selected_snapshot["snapshot_id"])
@@ -126,7 +130,24 @@ def dashboard(
                 base_query += " AND s.name = ?"
                 params.append(filter_strategy)
 
-        base_query += " ORDER BY c.name IS NULL, c.name, p.project_name"
+        # Sorting logic
+        sort_map = {
+            "project_id": "p.project_id",
+            "project_name": "p.project_name",
+            "champion": "c.name",
+            "strategy": "s.name",
+            "status": "p.current_status"
+        }
+        
+        # Default sort
+        order_clause = "ORDER BY c.name IS NULL, c.name, p.project_name"
+
+        if sort and sort in sort_map:
+            direction = "DESC" if order == "desc" else "ASC"
+            # Special handling for NULLs if needed, generally standard sort is fine
+            order_clause = f"ORDER BY {sort_map[sort]} {direction}"
+        
+        base_query += f" {order_clause}"
         active_projects = conn.execute(base_query, params).fetchall()
 
     # Distribution arrays for chart
@@ -211,6 +232,10 @@ def dashboard(
         "prop_strat_labels": prop_strat_labels,
         "prop_strat_values": prop_strat_values,
         "prop_strat_shares": prop_strat_shares,
+        "current_sort": sort,
+        "current_order": order,
+        "current_rank_sort": rank_sort,
+        "current_rank_order": rank_order,
     }
 
     return templates.TemplateResponse("dashboard.html", context)

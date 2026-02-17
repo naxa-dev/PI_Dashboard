@@ -35,18 +35,59 @@ def get_conn():
 def admin_home(request: Request, conn = Depends(get_conn)):
     """Render the admin page with snapshots list and upload form."""
     snapshots = conn.execute("SELECT * FROM snapshots ORDER BY snapshot_date DESC").fetchall()
-    return templates.TemplateResponse("admin.html", {"request": request, "snapshots": snapshots})
+    return templates.TemplateResponse("admin.html", {
+        "request": request,
+        "snapshots": snapshots,
+        "body_class": "cockpit"
+    })
 
 
 @router.post("/admin/upload", response_class=HTMLResponse)
-async def upload_snapshot(request: Request, file: UploadFile = File(...), conn = Depends(get_conn)):
-    """Handle snapshot upload."""
-    report = import_snapshot(file)
+async def upload_snapshot(request: Request, files: list[UploadFile] = File(...), conn = Depends(get_conn)):
+    """Handle snapshot upload (supports multiple files)."""
+    
+    aggregated_report = SnapshotReport(
+        success=True,
+        message="",
+        processed_projects=0,
+        processed_events=0,
+        warnings=[],
+        errors=[]
+    )
+    
+    valid_files_count = 0
+    
+    for file in files:
+        report = import_snapshot(file)
+        aggregated_report.processed_projects += report.processed_projects
+        aggregated_report.processed_events += report.processed_events
+        
+        prefix = f"[{file.filename}] "
+        if report.warnings:
+            aggregated_report.warnings.extend([prefix + w for w in report.warnings])
+        if report.errors:
+            aggregated_report.errors.extend([prefix + e for e in report.errors])
+            aggregated_report.success = False # One failure marks overall false, or we can keep it mixed.
+            # Let's keep success=True only if ALL succeed? 
+            # Actually, let's allow partial success but show errors.
+        
+        if report.success:
+            valid_files_count += 1
+
+    # Final message construction
+    if aggregated_report.errors:
+        aggregated_report.success = False
+        aggregated_report.message = f"Processed {len(files)} files. {valid_files_count} succeeded, {len(files)-valid_files_count} failed."
+    else:
+        aggregated_report.success = True
+        aggregated_report.message = f"Successfully uploaded {valid_files_count} files."
+
     snapshots = conn.execute("SELECT * FROM snapshots ORDER BY snapshot_date DESC").fetchall()
     return templates.TemplateResponse("admin.html", {
         "request": request,
         "snapshots": snapshots,
-        "report": report
+        "report": aggregated_report,
+        "body_class": "cockpit"
     })
 
 

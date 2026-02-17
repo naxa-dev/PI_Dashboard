@@ -11,7 +11,7 @@
         <span class="pill">📊 Month: <b>{{ selected_month if selected_month else '-' }}</b></span>
         <span class="pill">🎯 Purpose: 참여 촉진 & 운영 관리 (성과평가 목적 아님)</span>
         {% if bias_strategy %}
-          <span class="badge-warn">⚠️ 편중 경고: {{ bias_strategy }} {{ bias_ratio }}%</span>
+        <span class="badge-warn">⚠️ 편중 경고: {{ bias_strategy }} {{ bias_ratio }}%</span>
         {% endif %}
       </div>
     </div>
@@ -21,14 +21,15 @@
         <label>스냅샷</label>
         <select class="select" name="snapshot_id" onchange="this.form.submit()">
           {% for s in snapshots %}
-            <option value="{{ s['snapshot_id'] }}" {% if snapshot and s['snapshot_id'] == snapshot['snapshot_id'] %}selected{% endif %}>{{ s['snapshot_date'] }}</option>
+          <option value="{{ s['snapshot_id'] }}" {% if snapshot and s['snapshot_id']==snapshot['snapshot_id']
+            %}selected{% endif %}>{{ s['snapshot_date'] }}</option>
           {% endfor %}
         </select>
 
         <label>월</label>
         <select class="select" name="month" onchange="this.form.submit()">
           {% for m in months %}
-            <option value="{{ m }}" {% if selected_month == m %}selected{% endif %}>{{ m }}</option>
+          <option value="{{ m }}" {% if selected_month==m %}selected{% endif %}>{{ m }}</option>
           {% endfor %}
         </select>
 
@@ -36,7 +37,7 @@
         <select class="select" name="filter_status" onchange="this.form.submit()">
           {% set statuses = ['승인(진행중)','제안','심의중','완료','보류'] %}
           {% for st in statuses %}
-            <option value="{{ st }}" {% if selected_status == st %}selected{% endif %}>{{ st }}</option>
+          <option value="{{ st }}" {% if selected_status==st %}selected{% endif %}>{{ st }}</option>
           {% endfor %}
         </select>
 
@@ -44,9 +45,10 @@
         <select class="select" name="filter_champion" onchange="this.form.submit()">
           <option value="" {% if not selected_champion %}selected{% endif %}>전체</option>
           {% if heatmap %}
-            {% for champ_name in heatmap.keys() %}
-              <option value="{{ champ_name }}" {% if selected_champion == champ_name %}selected{% endif %}>{{ champ_name }}</option>
-            {% endfor %}
+          {% for champ_name in heatmap.keys() %}
+          <option value="{{ champ_name }}" {% if selected_champion==champ_name %}selected{% endif %}>{{ champ_name }}
+          </option>
+          {% endfor %}
           {% endif %}
         </select>
 
@@ -54,9 +56,9 @@
         <select class="select" name="filter_strategy" onchange="this.form.submit()">
           <option value="" {% if not selected_strategy %}selected{% endif %}>전체</option>
           {% for sname in dist_labels %}
-            <option value="{{ sname }}" {% if selected_strategy == sname %}selected{% endif %}>{{ sname }}</option>
+          <option value="{{ sname }}" {% if selected_strategy==sname %}selected{% endif %}>{{ sname }}</option>
           {% endfor %}
-          <option value="(미할당)" {% if selected_strategy == '(미할당)' %}selected{% endif %}>(미할당)</option>
+          <option value="(미할당)" {% if selected_strategy=='(미할당)' %}selected{% endif %}>(미할당)</option>
         </select>
       </form>
 
@@ -65,12 +67,12 @@
   </div>
 
   {% if not months %}
-    <div class="card">
-      <div class="card-head">
-        <p class="card-title">⚠️ 데이터 없음</p>
-      </div>
-      <p class="card-meta">선택한 스냅샷에 월별 탭 데이터가 없습니다. (AX_Master만 있을 수 있음)</p>
+  <div class="card">
+    <div class="card-head">
+      <p class="card-title">⚠️ 데이터 없음</p>
     </div>
+    <p class="card-meta">선택한 스냅샷에 월별 탭 데이터가 없습니다. (AX_Master만 있을 수 있음)</p>
+  </div>
   {% else %}
 
   <!-- =====================================================
@@ -101,6 +103,134 @@
       <div class="label">신규 과제 제안 유입률</div>
       <div class="value">{{ (kpis.proposal_inflow_rate * 100) | round(1) }}%</div>
       <div class="hint">제안/월승인</div>
+    </div>
+  </div>
+
+  <!-- =====================================================
+       ROW 1-2: ACTIVE PROJECTS - 진행중 과제 상세 (가장 중요)
+       ===================================================== -->
+  <div class="card" style="margin-top:16px;">
+    <div class="card-head">
+      <div style="display:flex; align-items:center; gap:8px;">
+        <p class="card-title">🔥 진행중 과제 리스트</p>
+        <select
+          style="background-color:rgba(15,30,55,0.6); color:rgba(255,255,255,0.9); border:1px solid rgba(96,165,250,0.3); border-radius:4px; padding:2px 6px; font-size:12px; outline:none;"
+          onchange="location.href='/?snapshot_id={{ snapshot['snapshot_id'] }}&month={{ selected_month }}&filter_status={{ selected_status }}{% if selected_strategy %}&filter_strategy={{ selected_strategy }}{% endif %}&filter_champion=' + this.value">
+          <option value="">Champion 전체</option>
+          {% if heatmap %}
+          {% for champ_name in heatmap.keys() %}
+          <option value="{{ champ_name }}" {% if selected_champion==champ_name %}selected{% endif %}>{{ champ_name }}
+          </option>
+          {% endfor %}
+          {% endif %}
+        </select>
+      </div>
+      <span class="card-meta">상태: {{ selected_status }}</span>
+    </div>
+
+    <div class="split">
+      <div>
+        <div class="card-meta" style="margin-bottom: 10px; font-weight: 700;">Champion별 진행중 수 랭킹 (클릭하면 필터 적용)</div>
+        <table class="table-dark">
+          <thead>
+            <tr>
+              <th style="width:50px;">#</th>
+              <th>
+                <a href="/?snapshot_id={{ snapshot['snapshot_id'] }}&month={{ selected_month }}&filter_status={{ selected_status }}&filter_champion={{ selected_champion or '' }}{% if selected_strategy %}&filter_strategy={{ selected_strategy }}{% endif %}&sort={{ current_sort or '' }}&order={{ current_order or '' }}&rank_sort=champion&rank_order={% if current_rank_sort == 'champion' and current_rank_order == 'asc' %}desc{% else %}asc{% endif %}"
+                  style="color: inherit; text-decoration: none; display: flex; align-items: center; gap: 4px;">
+                  Champion
+                  {% if current_rank_sort == 'champion' %}{{ '▼' if current_rank_order == 'desc' else '▲' }}{% endif %}
+                </a>
+              </th>
+              <th style="width:100px; text-align:right;">
+                <a href="/?snapshot_id={{ snapshot['snapshot_id'] }}&month={{ selected_month }}&filter_status={{ selected_status }}&filter_champion={{ selected_champion or '' }}{% if selected_strategy %}&filter_strategy={{ selected_strategy }}{% endif %}&sort={{ current_sort or '' }}&order={{ current_order or '' }}&rank_sort=count&rank_order={% if current_rank_sort == 'count' and current_rank_order == 'asc' %}desc{% else %}asc{% endif %}"
+                  style="color: inherit; text-decoration: none; display: flex; align-items: center; justify-content: flex-end; gap: 4px;">
+                  Count
+                  {% if current_rank_sort == 'count' %}{{ '▼' if current_rank_order == 'desc' else '▲' }}{% endif %}
+                </a>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for champ, cnt in active_ranking %}
+            <tr>
+              <td style="color:rgba(255,255,255,0.60);">{{ loop.index }}</td>
+              <td>
+                <a class="link"
+                  href="/?snapshot_id={{ snapshot['snapshot_id'] }}&month={{ selected_month }}&filter_status={{ selected_status }}&filter_champion={{ champ }}{% if selected_strategy %}&filter_strategy={{ selected_strategy }}{% endif %}">{{
+                  champ }}</a>
+              </td>
+              <td style="text-align:right; font-weight:900;">{{ cnt }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <div>
+        <div class="card-meta" style="margin-bottom: 10px; font-weight: 700;">리스트 (필터 적용됨 - {{ active_projects | length
+          }}건)</div>
+        <div style="max-height: 450px; overflow-y: auto; padding-right: 8px;">
+          <table class="table-dark">
+            <thead style="position: sticky; top: 0; z-index: 10;">
+              <tr>
+                <th style="width:90px;">
+                  <a href="/?snapshot_id={{ snapshot['snapshot_id'] }}&month={{ selected_month }}&filter_status={{ selected_status }}&filter_champion={{ selected_champion or '' }}{% if selected_strategy %}&filter_strategy={{ selected_strategy }}{% endif %}&sort=project_id&order={% if current_sort == 'project_id' and current_order == 'asc' %}desc{% else %}asc{% endif %}"
+                    style="color: inherit; text-decoration: none; display: flex; align-items: center; gap: 4px;">
+                    과제ID
+                    {% if current_sort == 'project_id' %}{{ '▼' if current_order == 'desc' else '▲' }}{% endif %}
+                  </a>
+                </th>
+                <th>
+                  <a href="/?snapshot_id={{ snapshot['snapshot_id'] }}&month={{ selected_month }}&filter_status={{ selected_status }}&filter_champion={{ selected_champion or '' }}{% if selected_strategy %}&filter_strategy={{ selected_strategy }}{% endif %}&sort=project_name&order={% if current_sort == 'project_name' and current_order == 'asc' %}desc{% else %}asc{% endif %}"
+                    style="color: inherit; text-decoration: none; display: flex; align-items: center; gap: 4px;">
+                    과제명
+                    {% if current_sort == 'project_name' %}{{ '▼' if current_order == 'desc' else '▲' }}{% endif %}
+                  </a>
+                </th>
+                <th style="width:120px;">
+                  <a href="/?snapshot_id={{ snapshot['snapshot_id'] }}&month={{ selected_month }}&filter_status={{ selected_status }}&filter_champion={{ selected_champion or '' }}{% if selected_strategy %}&filter_strategy={{ selected_strategy }}{% endif %}&sort=champion&order={% if current_sort == 'champion' and current_order == 'asc' %}desc{% else %}asc{% endif %}"
+                    style="color: inherit; text-decoration: none; display: flex; align-items: center; gap: 4px;">
+                    Champion
+                    {% if current_sort == 'champion' %}{{ '▼' if current_order == 'desc' else '▲' }}{% endif %}
+                  </a>
+                </th>
+                <th style="width:140px;">
+                  <a href="/?snapshot_id={{ snapshot['snapshot_id'] }}&month={{ selected_month }}&filter_status={{ selected_status }}&filter_champion={{ selected_champion or '' }}{% if selected_strategy %}&filter_strategy={{ selected_strategy }}{% endif %}&sort=strategy&order={% if current_sort == 'strategy' and current_order == 'asc' %}desc{% else %}asc{% endif %}"
+                    style="color: inherit; text-decoration: none; display: flex; align-items: center; gap: 4px;">
+                    전략
+                    {% if current_sort == 'strategy' %}{{ '▼' if current_order == 'desc' else '▲' }}{% endif %}
+                  </a>
+                </th>
+                <th style="width:110px;">
+                  <a href="/?snapshot_id={{ snapshot['snapshot_id'] }}&month={{ selected_month }}&filter_status={{ selected_status }}&filter_champion={{ selected_champion or '' }}{% if selected_strategy %}&filter_strategy={{ selected_strategy }}{% endif %}&sort=status&order={% if current_sort == 'status' and current_order == 'asc' %}desc{% else %}asc{% endif %}"
+                    style="color: inherit; text-decoration: none; display: flex; align-items: center; gap: 4px;">
+                    상태
+                    {% if current_sort == 'status' %}{{ '▼' if current_order == 'desc' else '▲' }}{% endif %}
+                  </a>
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for p in active_projects %}
+              <tr>
+                <td style="color:rgba(96,165,250,0.90); font-weight:800;">{{ p['project_id'] }}</td>
+                <td>{{ p['project_name'] }}</td>
+                <td>{{ p['champion_name'] if p['champion_id'] else '(미할당)' }}</td>
+                <td>{{ p['strategy_name'] if p['strategy_id'] else '(미할당)' }}</td>
+                <td><span
+                    style="padding: 4px 8px; background: rgba(52,211,153,0.20); border: 1px solid rgba(52,211,153,0.30); border-radius: 6px; font-size: 11px; font-weight: 700;">{{
+                    p['current_status'] }}</span></td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="card-meta" style="margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(96,165,250,0.12);">
+      💡 <b>중요:</b> 랭킹은 "성과평가"가 아니라 "AX 참여 촉진 및 운영 관리" 목적입니다. 필요 시 Champion 익명화(옵션) 가능.
     </div>
   </div>
 
@@ -182,401 +312,338 @@
           <tr>
             <th style="min-width:160px;">Champion</th>
             {% for m in months %}
-              <th>{{ m }}</th>
+            <th>{{ m }}</th>
             {% endfor %}
           </tr>
         </thead>
         <tbody>
           {% for champ_name, months_data in heatmap.items() %}
-            <tr>
-              <th style="white-space:nowrap; text-align:left;">{{ champ_name }}</th>
+          <tr>
+            <th style="white-space:nowrap; text-align:left;">{{ champ_name }}</th>
 
-              {% for m in months %}
-                {% set cell = months_data[m] %}
-                {% set val = cell['proposals'] + cell['approvals'] %}
-                {% set intensity = 0 %}
-                {% if max_prop + max_app > 0 %}
-                  {% set intensity = (val) / (max_prop + max_app) %}
-                {% endif %}
+            {% for m in months %}
+            {% set cell = months_data[m] %}
+            {% set val = cell['proposals'] + cell['approvals'] %}
+            {% set intensity = 0 %}
+            {% if max_prop + max_app > 0 %}
+            {% set intensity = (val) / (max_prop + max_app) %}
+            {% endif %}
 
-                {% set alpha = '%.2f' % (0.10 + (0.70 * intensity)) %}
+            {% set alpha = '%.2f' % (0.10 + (0.70 * intensity)) %}
 
-                <td
-                  class="hm-cell {% if val == 0 %}hm-zero{% endif %}"
-                  title="제안 {{ cell['proposals'] }} / 승인 {{ cell['approvals'] }}"
-                  style="
+            <td class="hm-cell {% if val == 0 %}hm-zero{% endif %}"
+              title="제안 {{ cell['proposals'] }} / 승인 {{ cell['approvals'] }}" style="
                     background:
                       linear-gradient(180deg, rgba(15,30,55,0.78) 0%, rgba(15,30,55,0.46) 100%),
                       rgba(96,165,250,{{ alpha }});
                     border: 1px solid rgba(96,165,250,0.18);
                     {% if val > 0 %}box-shadow: 0 0 14px rgba(96,165,250,{{ '%.2f' % (intensity * 0.35) }});{% endif %}
-                  "
-                >
-                  <div style="font-weight:900; font-size:13px; color: rgba(255,255,255,0.95);">
-                    {{ cell['proposals'] }}/{{ cell['approvals'] }}
-                  </div>
-                  <div style="font-size:10px; color: rgba(255,255,255,0.70); margin-top:3px;">
-                    P/A
-                  </div>
-                </td>
-              {% endfor %}
-            </tr>
+                  ">
+              <div style="font-weight:900; font-size:13px; color: rgba(255,255,255,0.95);">
+                {{ cell['proposals'] }}/{{ cell['approvals'] }}
+              </div>
+              <div style="font-size:10px; color: rgba(255,255,255,0.70); margin-top:3px;">
+                P/A
+              </div>
+            </td>
+            {% endfor %}
+          </tr>
           {% endfor %}
         </tbody>
       </table>
     </div>
   </div>
 
-  <!-- =====================================================
-       ROW 4: ACTIVE PROJECTS - 진행중 과제 상세 (가장 중요)
-       ===================================================== -->
-  <div class="card" style="margin-top:16px;">
-    <div class="card-head">
-      <p class="card-title">🔥 진행중 과제 리스트 (Champion별 구분)</p>
-      <span class="card-meta">상태: {{ selected_status }}</span>
-    </div>
 
-    <div class="split">
-      <div>
-        <div class="card-meta" style="margin-bottom: 10px; font-weight: 700;">Champion별 진행중 수 랭킹 (클릭하면 필터 적용)</div>
-        <table class="table-dark">
-          <thead>
-            <tr><th style="width:50px;">#</th><th>Champion</th><th style="width:100px; text-align:right;">Count</th></tr>
-          </thead>
-          <tbody>
-            {% for champ, cnt in active_ranking %}
-              <tr>
-                <td style="color:rgba(255,255,255,0.60);">{{ loop.index }}</td>
-                <td>
-                  <a class="link" href="/?snapshot_id={{ snapshot['snapshot_id'] }}&month={{ selected_month }}&filter_status={{ selected_status }}&filter_champion={{ champ }}{% if selected_strategy %}&filter_strategy={{ selected_strategy }}{% endif %}">{{ champ }}</a>
-                </td>
-                <td style="text-align:right; font-weight:900;">{{ cnt }}</td>
-              </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
-
-      <div>
-        <div class="card-meta" style="margin-bottom: 10px; font-weight: 700;">리스트 (필터 적용됨 - {{ active_projects | length }}건)</div>
-        <div style="max-height: 450px; overflow-y: auto; padding-right: 8px;">
-          <table class="table-dark">
-            <thead style="position: sticky; top: 0; z-index: 10;">
-              <tr>
-                <th style="width:90px;">과제ID</th>
-                <th>과제명</th>
-                <th style="width:120px;">Champion</th>
-                <th style="width:140px;">전략</th>
-                <th style="width:110px;">상태</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for p in active_projects %}
-                <tr>
-                  <td style="color:rgba(96,165,250,0.90); font-weight:800;">{{ p['project_id'] }}</td>
-                  <td>{{ p['project_name'] }}</td>
-                  <td>{{ p['champion_name'] if p['champion_id'] else '(미할당)' }}</td>
-                  <td>{{ p['strategy_name'] if p['strategy_id'] else '(미할당)' }}</td>
-                  <td><span style="padding: 4px 8px; background: rgba(52,211,153,0.20); border: 1px solid rgba(52,211,153,0.30); border-radius: 6px; font-size: 11px; font-weight: 700;">{{ p['current_status'] }}</span></td>
-                </tr>
-              {% endfor %}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-
-    <div class="card-meta" style="margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(96,165,250,0.12);">
-      💡 <b>중요:</b> 랭킹은 "성과평가"가 아니라 "AX 참여 촉진 및 운영 관리" 목적입니다. 필요 시 Champion 익명화(옵션) 가능.
-    </div>
-  </div>
 
   <script>
-  // Enhanced chart defaults for dark cockpit
-  Chart.defaults.color = 'rgba(255,255,255,0.85)';
-  Chart.defaults.borderColor = 'rgba(96,165,250,0.15)';
-  Chart.defaults.font.family = "ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Noto Sans KR, Arial";
-  Chart.defaults.font.size = 11;
+    // Enhanced chart defaults for dark cockpit
+    Chart.defaults.color = 'rgba(255,255,255,0.85)';
+    Chart.defaults.borderColor = 'rgba(96,165,250,0.15)';
+    Chart.defaults.font.family = "ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Noto Sans KR, Arial";
+    Chart.defaults.font.size = 11;
 
-  const trendMonths = {{ trend_months | tojson }};
-  const trendProposals = {{ trend_proposals | tojson }};
-  const trendApprovals = {{ trend_approvals | tojson }};
+    const trendMonths = {{ trend_months | tojson }};
+    const trendProposals = {{ trend_proposals | tojson }};
+    const trendApprovals = {{ trend_approvals | tojson }};
 
-  const statusLabels = {{ status_labels | tojson }};
-  const statusValues = {{ status_values | tojson }};
+    const statusLabels = {{ status_labels | tojson }};
+    const statusValues = {{ status_values | tojson }};
 
-  const topPropLabels = {{ top_prop_labels | tojson }};
-  const topPropValues = {{ top_prop_values | tojson }};
-  const topAppLabels = {{ top_app_labels | tojson }};
-  const topAppValues = {{ top_app_values | tojson }};
+    const topPropLabels = {{ top_prop_labels | tojson }};
+    const topPropValues = {{ top_prop_values | tojson }};
+    const topAppLabels = {{ top_app_labels | tojson }};
+    const topAppValues = {{ top_app_values | tojson }};
 
-  const distLabels = {{ dist_labels | tojson }};
-  const proposalsData = {{ proposals_data | tojson }};
-  const approvalsData = {{ approvals_data | tojson }};
-  const activeData = {{ active_data | tojson }};
+    const distLabels = {{ dist_labels | tojson }};
+    const proposalsData = {{ proposals_data | tojson }};
+    const approvalsData = {{ approvals_data | tojson }};
+    const activeData = {{ active_data | tojson }};
 
-  const activeStratLabels = {{ active_strat_labels | tojson }};
-  const activeStratValues = {{ active_strat_values | tojson }};
+    const activeStratLabels = {{ active_strat_labels | tojson }};
+    const activeStratValues = {{ active_strat_values | tojson }};
 
-  // 1) Trend line
-  new Chart(document.getElementById('trendChart'), {
-    type: 'line',
-    data: {
-      labels: trendMonths,
-      datasets: [
-        {
-          label: '제안',
-          data: trendProposals,
-          tension: 0.4,
-          borderWidth: 3,
-          pointRadius: 4,
-          pointHoverRadius: 6,
-          borderColor: 'rgba(96,165,250,1)',
-          backgroundColor: 'rgba(96,165,250,0.25)',
-          fill: true,
-          pointBackgroundColor: 'rgba(96,165,250,1)',
-          pointBorderColor: 'rgba(255,255,255,0.3)',
-          pointBorderWidth: 2
-        },
-        {
-          label: '승인',
-          data: trendApprovals,
-          tension: 0.4,
-          borderWidth: 3,
-          pointRadius: 4,
-          pointHoverRadius: 6,
-          borderColor: 'rgba(167,139,250,1)',
-          backgroundColor: 'rgba(167,139,250,0.22)',
-          fill: true,
-          pointBackgroundColor: 'rgba(167,139,250,1)',
-          pointBorderColor: 'rgba(255,255,255,0.3)',
-          pointBorderWidth: 2
-        }
-      ]
-    },
-    options: {
-      responsive: true,
-      interaction: { intersect: false, mode: 'index' },
-      plugins: {
-        legend: { position: 'top', labels: { boxWidth: 12, padding: 15, font: { weight: 'bold' } } },
-        tooltip: {
-          backgroundColor: 'rgba(15,30,55,0.95)',
-          borderColor: 'rgba(96,165,250,0.5)',
-          borderWidth: 1,
-          padding: 12,
-          titleFont: { size: 13, weight: 'bold' },
-          bodyFont: { size: 12 }
-        }
+    // 1) Trend line
+    new Chart(document.getElementById('trendChart'), {
+      type: 'line',
+      data: {
+        labels: trendMonths,
+        datasets: [
+          {
+            label: '제안',
+            data: trendProposals,
+            tension: 0.4,
+            borderWidth: 3,
+            pointRadius: 4,
+            pointHoverRadius: 6,
+            borderColor: 'rgba(96,165,250,1)',
+            backgroundColor: 'rgba(96,165,250,0.25)',
+            fill: true,
+            pointBackgroundColor: 'rgba(96,165,250,1)',
+            pointBorderColor: 'rgba(255,255,255,0.3)',
+            pointBorderWidth: 2
+          },
+          {
+            label: '승인',
+            data: trendApprovals,
+            tension: 0.4,
+            borderWidth: 3,
+            pointRadius: 4,
+            pointHoverRadius: 6,
+            borderColor: 'rgba(167,139,250,1)',
+            backgroundColor: 'rgba(167,139,250,0.22)',
+            fill: true,
+            pointBackgroundColor: 'rgba(167,139,250,1)',
+            pointBorderColor: 'rgba(255,255,255,0.3)',
+            pointBorderWidth: 2
+          }
+        ]
       },
-      scales: {
-        y: { beginAtZero: true, ticks: { precision: 0 }, grid: { color: 'rgba(96,165,250,0.08)' } },
-        x: { grid: { display: false } }
-      }
-    }
-  });
-
-  // 2) Status donut
-  new Chart(document.getElementById('statusChart'), {
-    type: 'doughnut',
-    data: {
-      labels: statusLabels,
-      datasets: [{
-        data: statusValues,
-        backgroundColor: [
-          'rgba(96,165,250,0.90)',
-          'rgba(52,211,153,0.85)',
-          'rgba(251,191,36,0.83)',
-          'rgba(167,139,250,0.85)',
-          'rgba(239,68,68,0.83)',
-          'rgba(148,163,184,0.60)'
-        ],
-        borderWidth: 2,
-        borderColor: 'rgba(15,30,55,0.8)',
-        hoverOffset: 8
-      }]
-    },
-    options: {
-      responsive: true,
-      cutout: '65%',
-      plugins: {
-        legend: {
-          position: 'bottom',
-          labels: {
-            color: 'rgba(255,255,255,0.88)',
+      options: {
+        responsive: true,
+        interaction: { intersect: false, mode: 'index' },
+        plugins: {
+          legend: { position: 'top', labels: { boxWidth: 12, padding: 15, font: { weight: 'bold' } } },
+          tooltip: {
+            backgroundColor: 'rgba(15,30,55,0.95)',
+            borderColor: 'rgba(96,165,250,0.5)',
+            borderWidth: 1,
             padding: 12,
-            font: { size: 11, weight: 'bold' },
-            generateLabels: function(chart) {
-              const data = chart.data;
-              return data.labels.map((label, i) => ({
-                text: `${label} (${data.datasets[0].data[i]})`,
-                fillStyle: data.datasets[0].backgroundColor[i],
-                hidden: false,
-                index: i
-              }));
-            }
+            titleFont: { size: 13, weight: 'bold' },
+            bodyFont: { size: 12 }
           }
         },
-        tooltip: {
-          backgroundColor: 'rgba(15,30,55,0.95)',
-          borderColor: 'rgba(96,165,250,0.5)',
-          borderWidth: 1,
-          padding: 12
+        scales: {
+          y: { beginAtZero: true, ticks: { precision: 0 }, grid: { color: 'rgba(96,165,250,0.08)' } },
+          x: { grid: { display: false } }
         }
       }
-    }
-  });
+    });
 
-  // 3) Top 10 Proposal - Horizontal bar
-  new Chart(document.getElementById('topProposalChart'), {
-    type: 'bar',
-    data: {
-      labels: topPropLabels,
-      datasets: [{
-        label: '제안 건수',
-        data: topPropValues,
-        backgroundColor: 'rgba(96,165,250,0.70)',
-        borderColor: 'rgba(96,165,250,0.9)',
-        borderWidth: 1,
-        borderRadius: 6
-      }]
-    },
-    options: {
-      indexAxis: 'y',
-      responsive: true,
-      plugins: {
-        legend: { display: false },
-        tooltip: {
-          backgroundColor: 'rgba(15,30,55,0.95)',
-          borderColor: 'rgba(96,165,250,0.5)',
-          borderWidth: 1,
-          padding: 10
-        }
+    // 2) Status donut
+    new Chart(document.getElementById('statusChart'), {
+      type: 'doughnut',
+      data: {
+        labels: statusLabels,
+        datasets: [{
+          data: statusValues,
+          backgroundColor: [
+            'rgba(96,165,250,0.90)',
+            'rgba(52,211,153,0.85)',
+            'rgba(251,191,36,0.83)',
+            'rgba(167,139,250,0.85)',
+            'rgba(239,68,68,0.83)',
+            'rgba(148,163,184,0.60)'
+          ],
+          borderWidth: 2,
+          borderColor: 'rgba(15,30,55,0.8)',
+          hoverOffset: 8
+        }]
       },
-      scales: {
-        x: { beginAtZero: true, ticks: { precision: 0 }, grid: { color: 'rgba(96,165,250,0.08)' } },
-        y: { grid: { display: false } }
-      }
-    }
-  });
-
-  // 4) Top 10 Approval - Horizontal bar
-  new Chart(document.getElementById('topApprovalChart'), {
-    type: 'bar',
-    data: {
-      labels: topAppLabels,
-      datasets: [{
-        label: '승인 건수',
-        data: topAppValues,
-        backgroundColor: 'rgba(167,139,250,0.70)',
-        borderColor: 'rgba(167,139,250,0.9)',
-        borderWidth: 1,
-        borderRadius: 6
-      }]
-    },
-    options: {
-      indexAxis: 'y',
-      responsive: true,
-      plugins: {
-        legend: { display: false },
-        tooltip: {
-          backgroundColor: 'rgba(15,30,55,0.95)',
-          borderColor: 'rgba(167,139,250,0.5)',
-          borderWidth: 1,
-          padding: 10
+      options: {
+        responsive: true,
+        cutout: '65%',
+        plugins: {
+          legend: {
+            position: 'bottom',
+            labels: {
+              color: 'rgba(255,255,255,0.88)',
+              padding: 12,
+              font: { size: 11, weight: 'bold' },
+              generateLabels: function (chart) {
+                const data = chart.data;
+                return data.labels.map((label, i) => ({
+                  text: `${label} (${data.datasets[0].data[i]})`,
+                  fillStyle: data.datasets[0].backgroundColor[i],
+                  strokeStyle: 'transparent',
+                  fontColor: 'rgba(255,255,255,0.85)', // Match Chart.defaults.color
+                  hidden: false,
+                  index: i
+                }));
+              }
+            }
+          },
+          tooltip: {
+            backgroundColor: 'rgba(15,30,55,0.95)',
+            borderColor: 'rgba(96,165,250,0.5)',
+            borderWidth: 1,
+            padding: 12
+          }
         }
-      },
-      scales: {
-        x: { beginAtZero: true, ticks: { precision: 0 }, grid: { color: 'rgba(96,165,250,0.08)' } },
-        y: { grid: { display: false } }
       }
-    }
-  });
+    });
 
-  // 5) Strategy distribution (clustered)
-  new Chart(document.getElementById('distChart'), {
-    type: 'bar',
-    data: {
-      labels: distLabels,
-      datasets: [
-        {
-          label: '제안',
-          data: proposalsData,
-          backgroundColor: 'rgba(96,165,250,0.60)',
+    // 3) Top 10 Proposal - Horizontal bar
+    new Chart(document.getElementById('topProposalChart'), {
+      type: 'bar',
+      data: {
+        labels: topPropLabels,
+        datasets: [{
+          label: '제안 건수',
+          data: topPropValues,
+          backgroundColor: 'rgba(96,165,250,0.70)',
           borderColor: 'rgba(96,165,250,0.9)',
           borderWidth: 1,
-          borderRadius: 4
+          borderRadius: 6
+        }]
+      },
+      options: {
+        indexAxis: 'y',
+        responsive: true,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: 'rgba(15,30,55,0.95)',
+            borderColor: 'rgba(96,165,250,0.5)',
+            borderWidth: 1,
+            padding: 10
+          }
         },
-        {
-          label: '승인',
-          data: approvalsData,
-          backgroundColor: 'rgba(167,139,250,0.60)',
+        scales: {
+          x: { beginAtZero: true, ticks: { precision: 0 }, grid: { color: 'rgba(96,165,250,0.08)' } },
+          y: { grid: { display: false } }
+        }
+      }
+    });
+
+    // 4) Top 10 Approval - Horizontal bar
+    new Chart(document.getElementById('topApprovalChart'), {
+      type: 'bar',
+      data: {
+        labels: topAppLabels,
+        datasets: [{
+          label: '승인 건수',
+          data: topAppValues,
+          backgroundColor: 'rgba(167,139,250,0.70)',
           borderColor: 'rgba(167,139,250,0.9)',
           borderWidth: 1,
-          borderRadius: 4
-        },
-        {
-          label: '진행중',
-          data: activeData,
-          backgroundColor: 'rgba(52,211,153,0.60)',
-          borderColor: 'rgba(52,211,153,0.9)',
-          borderWidth: 1,
-          borderRadius: 4
-        }
-      ]
-    },
-    options: {
-      responsive: true,
-      plugins: {
-        legend: { position: 'top', labels: { boxWidth: 12, padding: 12, font: { weight: 'bold' } } },
-        tooltip: {
-          backgroundColor: 'rgba(15,30,55,0.95)',
-          borderColor: 'rgba(96,165,250,0.5)',
-          borderWidth: 1,
-          padding: 10
-        }
+          borderRadius: 6
+        }]
       },
-      scales: {
-        y: { beginAtZero: true, ticks: { precision: 0 }, grid: { color: 'rgba(96,165,250,0.08)' } },
-        x: { grid: { display: false } }
-      }
-    }
-  });
-
-  // 6) Active by strategy (doughnut)
-  new Chart(document.getElementById('activeStrategyChart'), {
-    type: 'doughnut',
-    data: {
-      labels: activeStratLabels,
-      datasets: [{
-        label: '진행중',
-        data: activeStratValues,
-        backgroundColor: [
-          'rgba(52,211,153,0.85)',
-          'rgba(96,165,250,0.85)',
-          'rgba(167,139,250,0.85)',
-          'rgba(251,191,36,0.80)',
-          'rgba(239,68,68,0.80)',
-          'rgba(148,163,184,0.70)'
-        ],
-        borderWidth: 2,
-        borderColor: 'rgba(15,30,55,0.8)',
-        hoverOffset: 6
-      }]
-    },
-    options: {
-      responsive: true,
-      cutout: '60%',
-      plugins: {
-        legend: { position: 'bottom', labels: { padding: 10, font: { size: 11, weight: 'bold' } } },
-        tooltip: {
-          backgroundColor: 'rgba(15,30,55,0.95)',
-          borderColor: 'rgba(52,211,153,0.5)',
-          borderWidth: 1,
-          padding: 10
+      options: {
+        indexAxis: 'y',
+        responsive: true,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: 'rgba(15,30,55,0.95)',
+            borderColor: 'rgba(167,139,250,0.5)',
+            borderWidth: 1,
+            padding: 10
+          }
+        },
+        scales: {
+          x: { beginAtZero: true, ticks: { precision: 0 }, grid: { color: 'rgba(96,165,250,0.08)' } },
+          y: { grid: { display: false } }
         }
       }
-    }
-  });
+    });
+
+    // 5) Strategy distribution (clustered)
+    new Chart(document.getElementById('distChart'), {
+      type: 'bar',
+      data: {
+        labels: distLabels,
+        datasets: [
+          {
+            label: '제안',
+            data: proposalsData,
+            backgroundColor: 'rgba(96,165,250,0.60)',
+            borderColor: 'rgba(96,165,250,0.9)',
+            borderWidth: 1,
+            borderRadius: 4
+          },
+          {
+            label: '승인',
+            data: approvalsData,
+            backgroundColor: 'rgba(167,139,250,0.60)',
+            borderColor: 'rgba(167,139,250,0.9)',
+            borderWidth: 1,
+            borderRadius: 4
+          },
+          {
+            label: '진행중',
+            data: activeData,
+            backgroundColor: 'rgba(52,211,153,0.60)',
+            borderColor: 'rgba(52,211,153,0.9)',
+            borderWidth: 1,
+            borderRadius: 4
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { position: 'top', labels: { boxWidth: 12, padding: 12, font: { weight: 'bold' } } },
+          tooltip: {
+            backgroundColor: 'rgba(15,30,55,0.95)',
+            borderColor: 'rgba(96,165,250,0.5)',
+            borderWidth: 1,
+            padding: 10
+          }
+        },
+        scales: {
+          y: { beginAtZero: true, ticks: { precision: 0 }, grid: { color: 'rgba(96,165,250,0.08)' } },
+          x: { grid: { display: false } }
+        }
+      }
+    });
+
+    // 6) Active by strategy (doughnut)
+    new Chart(document.getElementById('activeStrategyChart'), {
+      type: 'doughnut',
+      data: {
+        labels: activeStratLabels,
+        datasets: [{
+          label: '진행중',
+          data: activeStratValues,
+          backgroundColor: [
+            'rgba(52,211,153,0.85)',
+            'rgba(96,165,250,0.85)',
+            'rgba(167,139,250,0.85)',
+            'rgba(251,191,36,0.80)',
+            'rgba(239,68,68,0.80)',
+            'rgba(148,163,184,0.70)'
+          ],
+          borderWidth: 2,
+          borderColor: 'rgba(15,30,55,0.8)',
+          hoverOffset: 6
+        }]
+      },
+      options: {
+        responsive: true,
+        cutout: '60%',
+        plugins: {
+          legend: { position: 'bottom', labels: { padding: 10, font: { size: 11, weight: 'bold' } } },
+          tooltip: {
+            backgroundColor: 'rgba(15,30,55,0.95)',
+            borderColor: 'rgba(52,211,153,0.5)',
+            borderWidth: 1,
+            padding: 10
+          }
+        }
+      }
+    });
 
   </script>
 
