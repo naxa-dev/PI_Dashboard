@@ -58,7 +58,6 @@
           {% endfor %}
           <option value="(미할당)" {% if selected_strategy == '(미할당)' %}selected{% endif %}>(미할당)</option>
         </select>
-
       </form>
 
       <a href="/admin">⚙️ 운영(업로드/관리)</a>
@@ -77,7 +76,7 @@
   <!-- =====================================================
        ROW 1: KEY METRICS - 핵심 지표 한눈에 보기
        ===================================================== -->
-  <div class="cockpit-grid" style="grid-template-columns: repeat(6, 1fr);">
+  <div class="cockpit-grid" style="grid-template-columns: repeat(5, 1fr);">
     <div class="kpi">
       <div class="label">진행중(누적 승인)</div>
       <div class="value">{{ kpis.cumulative_approved }}</div>
@@ -93,11 +92,6 @@
       <div class="value">{{ kpis.month_approvals }}</div>
       <div class="hint">{{ selected_month }}</div>
     </div>
-    <!-- <div class="kpi">
-      <div class="label">Champion 참여율</div>
-      <div class="value">{{ (kpis.champion_participation_rate * 100) | round(1) }}%</div>
-      <div class="hint">(제안+승인&gt;0)</div>
-    </div> -->
     <div class="kpi">
       <div class="label">과제 추진 확대율</div>
       <div class="value">{{ (kpis.expansion_rate * 100) | round(1) }}%</div>
@@ -173,50 +167,64 @@
   </div>
 
   <!-- =====================================================
-       ROW 3-2: MONTHLY PROPOSAL SHARE (NEW)
+       ROW 3-2: HEATMAP - Champion 활동 전체 보기 (제안/승인)
+       (기존 "월 신규 제안 전략분류 비중" 자리에 대체)
        ===================================================== -->
-  <div class="cockpit-grid" style="margin-top:16px; grid-template-columns: 1.2fr 1fr;">
-
-    <div class="card">
-      <div class="card-head">
-        <p class="card-title">🧭 월 신규 제안 전략분류 비중</p>
-        <span class="card-meta">{{ selected_month }} (신규제안=1)</span>
-      </div>
-      <canvas id="proposalShareChart" height="220"></canvas>
+  <div class="card" style="margin-top:16px;">
+    <div class="card-head">
+      <p class="card-title">🔥 Champion 활동 히트맵 (제안/승인)</p>
+      <span class="card-meta">스냅샷 전체 기간 - 마우스 오버로 상세 확인</span>
     </div>
 
-    <div class="card">
-      <div class="card-head">
-        <p class="card-title">📌 비중 상세</p>
-        <span class="card-meta">전략별 신규 제안 건수/비중</span>
-      </div>
-      <div style="max-height: 240px; overflow:auto; padding-right:8px;">
-        <table class="table-dark">
-          <thead>
-            <tr>
-              <th>전략분류</th>
-              <th style="width:90px; text-align:right;">건수</th>
-              <th style="width:90px; text-align:right;">비중</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for i in range(prop_strat_labels|length) %}
-              <tr>
-                <td>{{ prop_strat_labels[i] }}</td>
-                <td style="text-align:right; font-weight:900;">{{ prop_strat_values[i] }}</td>
-                <td style="text-align:right; color: rgba(255,255,255,0.80);">{{ prop_strat_shares[i] }}%</td>
-              </tr>
+    <div class="heatmap-wrap">
+      <table class="heatmap">
+        <thead>
+          <tr>
+            <th style="min-width:160px;">Champion</th>
+            {% for m in months %}
+              <th>{{ m }}</th>
             {% endfor %}
-            {% if prop_strat_labels|length == 0 %}
-              <tr>
-                <td colspan="3" style="color: rgba(255,255,255,0.65);">데이터 없음</td>
-              </tr>
-            {% endif %}
-          </tbody>
-        </table>
-      </div>
-    </div>
+          </tr>
+        </thead>
+        <tbody>
+          {% for champ_name, months_data in heatmap.items() %}
+            <tr>
+              <th style="white-space:nowrap; text-align:left;">{{ champ_name }}</th>
 
+              {% for m in months %}
+                {% set cell = months_data[m] %}
+                {% set val = cell['proposals'] + cell['approvals'] %}
+                {% set intensity = 0 %}
+                {% if max_prop + max_app > 0 %}
+                  {% set intensity = (val) / (max_prop + max_app) %}
+                {% endif %}
+
+                {% set alpha = '%.2f' % (0.10 + (0.70 * intensity)) %}
+
+                <td
+                  class="hm-cell {% if val == 0 %}hm-zero{% endif %}"
+                  title="제안 {{ cell['proposals'] }} / 승인 {{ cell['approvals'] }}"
+                  style="
+                    background:
+                      linear-gradient(180deg, rgba(15,30,55,0.78) 0%, rgba(15,30,55,0.46) 100%),
+                      rgba(96,165,250,{{ alpha }});
+                    border: 1px solid rgba(96,165,250,0.18);
+                    {% if val > 0 %}box-shadow: 0 0 14px rgba(96,165,250,{{ '%.2f' % (intensity * 0.35) }});{% endif %}
+                  "
+                >
+                  <div style="font-weight:900; font-size:13px; color: rgba(255,255,255,0.95);">
+                    {{ cell['proposals'] }}/{{ cell['approvals'] }}
+                  </div>
+                  <div style="font-size:10px; color: rgba(255,255,255,0.70); margin-top:3px;">
+                    P/A
+                  </div>
+                </td>
+              {% endfor %}
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
   </div>
 
   <!-- =====================================================
@@ -283,48 +291,6 @@
     </div>
   </div>
 
-  <!-- =====================================================
-       ROW 5: HEATMAP - Champion 활동 전체 보기
-       ===================================================== -->
-  <div class="card" style="margin-top:16px;">
-    <div class="card-head">
-      <p class="card-title">🔥 Champion 활동 히트맵 (제안/승인)</p>
-      <span class="card-meta">스냅샷 전체 기간 - 마우스 오버로 상세 확인</span>
-    </div>
-    <div style="overflow:auto; padding-bottom: 8px;">
-      <table class="heatmap">
-        <thead>
-          <tr>
-            <th style="min-width:160px;">Champion</th>
-            {% for m in months %}
-              <th>{{ m }}</th>
-            {% endfor %}
-          </tr>
-        </thead>
-        <tbody>
-          {% for champ_name, months_data in heatmap.items() %}
-            <tr>
-              <th style="white-space:nowrap; text-align: left;">{{ champ_name }}</th>
-              {% for m in months %}
-                {% set cell = months_data[m] %}
-                {% set val = cell['proposals'] + cell['approvals'] %}
-                {% set intensity = 0 %}
-                {% if max_prop + max_app > 0 %}
-                  {% set intensity = (val) / (max_prop + max_app) %}
-                {% endif %}
-                {% set alpha = '%.2f' % (0.15 + (0.75 * intensity)) %}
-                <td style="background: rgba(96,165,250,{{ alpha }}); {% if val > 0 %}box-shadow: 0 0 12px rgba(96,165,250,{{ '%.2f' % (intensity * 0.4) }});{% endif %}">
-                  <div style="font-weight:900; font-size: 13px;">{{ cell['proposals'] }}/{{ cell['approvals'] }}</div>
-                  <div style="font-size:10px; color: rgba(255,255,255,0.70); margin-top:3px;">P/A</div>
-                </td>
-              {% endfor %}
-            </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
-  </div>
-
   <script>
   // Enhanced chart defaults for dark cockpit
   Chart.defaults.color = 'rgba(255,255,255,0.85)';
@@ -351,9 +317,6 @@
 
   const activeStratLabels = {{ active_strat_labels | tojson }};
   const activeStratValues = {{ active_strat_values | tojson }};
-
-  const propStratLabels = {{ prop_strat_labels | tojson }};
-  const propStratValues = {{ prop_strat_values | tojson }};
 
   // 1) Trend line
   new Chart(document.getElementById('trendChart'), {
@@ -439,6 +402,7 @@
         legend: {
           position: 'bottom',
           labels: {
+            color: 'rgba(255,255,255,0.88)',
             padding: 12,
             font: { size: 11, weight: 'bold' },
             generateLabels: function(chart) {
@@ -614,41 +578,6 @@
     }
   });
 
-  // 7) Proposal share by strategy (this month)
-  new Chart(document.getElementById('proposalShareChart'), {
-    type: 'doughnut',
-    data: {
-      labels: propStratLabels,
-      datasets: [{
-        label: '월 신규 제안',
-        data: propStratValues,
-        backgroundColor: [
-          'rgba(96,165,250,0.85)',
-          'rgba(167,139,250,0.85)',
-          'rgba(52,211,153,0.85)',
-          'rgba(251,191,36,0.80)',
-          'rgba(239,68,68,0.80)',
-          'rgba(148,163,184,0.70)'
-        ],
-        borderWidth: 2,
-        borderColor: 'rgba(15,30,55,0.8)',
-        hoverOffset: 8
-      }]
-    },
-    options: {
-      responsive: true,
-      cutout: '62%',
-      plugins: {
-        legend: { position: 'bottom', labels: { padding: 10, font: { size: 11, weight: 'bold' } } },
-        tooltip: {
-          backgroundColor: 'rgba(15,30,55,0.95)',
-          borderColor: 'rgba(96,165,250,0.5)',
-          borderWidth: 1,
-          padding: 10
-        }
-      }
-    }
-  });
   </script>
 
   {% endif %}
