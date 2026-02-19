@@ -2,6 +2,14 @@
 
 AX 프로젝트 관리 및 시각화를 위한 FastAPI 기반 애플리케이션입니다. 엑셀 스냅샷 업로드, 데이터 관리(CRUD), 그리고 이해관계자를 위한 인터랙티브 대시보드를 제공합니다.
 
+
+<img width="30%" alt="image" src="https://github.com/user-attachments/assets/d013923f-c385-4a5c-81d7-29ba793f6118" />
+<img width="30%8" alt="image" src="https://github.com/user-attachments/assets/56b91dd7-6f83-4aff-b512-46367cedae69" />
+<img width="30%" alt="image" src="https://github.com/user-attachments/assets/6f0b403b-713a-486f-b164-c8304462c62f" />
+<img width="30%" alt="image" src="https://github.com/user-attachments/assets/d30ce6f2-8f45-46d2-b5e7-079a8bedb012" />
+<img width="30%" alt="image" src="https://github.com/user-attachments/assets/5374c0dc-cecb-4525-b045-6988ef770a5d" />
+<img width="30%" alt="image" src="https://github.com/user-attachments/assets/785bc2f2-8af0-4919-8bbc-b684d467bded" />
+
 ## 주요 기능
 
 *   **엑셀 업로드**: `YYYY-MM-DD.xlsx` 형식의 스냅샷 파일을 업로드하여 데이터를 동기화합니다.
