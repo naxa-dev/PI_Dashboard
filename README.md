@@ -1,6 +1,6 @@
 #  PI Dashboard (Project Insight Dashboard)
 
-PI Dashboard는 엑셀 기반의 프로젝트 데이터를 분석하여 직관적인 통찰력을 제공하는 **프로젝트 인사이트 대시보드**입니다. 복잡한 데이터를 시각화하고 실시간으로 성과를 모니터링하여 효율적인 의사결정을 돕습니다.
+PI Dashboard는 엑셀 기반의 프로젝트 데이터를 분석하여 직관적인 통찰력을 제공하는 **프로젝트 인사이트 대시보드**입니다. 복잡한 데이터를 시각화하고 성과를 모니터링하여 효율적인 의사결정을 돕습니다.
 
 
 <img width="30%" alt="image" src="https://github.com/user-attachments/assets/d013923f-c385-4a5c-81d7-29ba793f6118" />
